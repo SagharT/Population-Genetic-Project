@@ -84,3 +84,5 @@ Or you can run the web application on the following link:
 https://saghart-population-genetic-project-webaplication-7e56el.streamlit.app/
 
 A screenshot of the web application is shown below:
+![fig1](https://user-images.githubusercontent.com/112621611/226444339-d85fe7d7-d342-4716-b92c-cf8e482ff0f7.jpeg)
+
