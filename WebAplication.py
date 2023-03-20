@@ -1,3 +1,5 @@
+#Run: streamlit run WebAplication.py or this 
+#link: https://saghart-population-genetic-project-webaplication-7e56el.streamlit.app/
 import streamlit as st
 import plotly.express as px
 import numpy as np
@@ -5,8 +7,7 @@ from sklearn.cluster import KMeans
 import json
 import random
 
-#Clustering countries into 8 clusters by latitude and longitude so countries that 
-#are close to each other are in the same cluster.
+#Clustering countries into 8 clusters by latitude and longitude.
 #countrynames.txt contains the names of the countries and their latitude and longitude values.
 #Load data from file
 data = np.genfromtxt('Data/countrynames.txt', delimiter=' ', dtype='str')
@@ -19,7 +20,7 @@ lat_long[:,:] += 1
 lat_long[:,:] /= 2
 #Fit K-Means model with 8 clusters
 kmeans = KMeans(n_clusters=8, random_state=0).fit(lat_long)
-# Print the clusters and coordinates of each center
+#Print the clusters and coordinates of each center
 cluster_coords = []
 cluster_countries = []
 for i in range(8):
@@ -35,21 +36,17 @@ for i in range(8):
     cluster_coords.append(center)
 
 
-#Make a page that shows the map of the world and the pie chart of the minor allele frequency of a SNP 
-#in each cluster. In the page, the user can write a name of a SNP and choose a year range.
-#year range is the range of years that the user wants to see the minor allele frequency of the SNP.
-#year range is from 1 to 10000 years with a step of 2000 years.
+
+#Make a page that shows the map of the world and the pie chart of the minor allele frequency of a SNP in each cluster.
+#Add title, text input box, random button and select year box to the page
 #Add title to the page
 original_title = '<p style="color:Black; font-size: 30px;">Geography of Minor allele frequency (MAF)</p>'
 st.markdown(original_title, unsafe_allow_html=True)
 
-
-#Divide the page into two columns to show the text input and the select box
+#Divide the page into three columns to show the text input, random box and the select year box
 col1, col2, col3 = st.columns(3)
-#In column 1 is a text box for the SNP that the user wants to see the minor allele frequency of
 
-#Make a box that user press and it choose a random SNP
-#Valid snps are the snps that are in the json file Data/available_snps.json
+#In column 2 is a button that user can press to choose a random SNP
 available_snps = json.load(open("Data/available_snps.json"))
 #Define the button
 col2.text('')
@@ -60,6 +57,7 @@ if btn_select_snp:
    snp = random.choice(available_snps)
    st.session_state['snp'] = snp
 
+#In column 1, show the text input box for the user to input a SNP
 with col1:
  snp = st.text_input(
     'SNP',
@@ -73,8 +71,6 @@ with col3:
 with open ("Data/"+year_range+"_years.txt.json") as user_file:
     json_file = json.load(user_file)
 
-
-
 #If snp is empty, ask the user to input a SNP
 if snp == "":
     st.write("Please input a SNP or press the random button.")
@@ -86,9 +82,7 @@ if snp not in json_file:
 
 
 
-
-#Divide the page into two columns to show the map and map information.
-#One column is twice as big as the other column
+#Divide the page into two columns to show the map and map information.One column is twice as big as the other column
 col1,col2 = st.columns([2,1])
 #To the right of the map is the information about the frequency scale
 information = '<p  </p>'+'<p style="font-size: 13px ; margin-bottom: 2px;">Frequency Scale = Proportion out of 0.1</p>'+\
@@ -105,10 +99,9 @@ col2.plotly_chart(fig_info, use_container_width=True, align="center")
 
 
 
-
-#Make the world map
+#Make the world map, add the pie charts to each cluster and show the map
 fig = px.choropleth()
-#Adjust the map size
+#Adjust the map size, show the countries and the ocean
 fig.update_layout(height=400, width=1000)
 fig.update_geos(showcountries=True, countrycolor="LightGrey", showocean=True, 
                 oceancolor="Lightblue")
@@ -118,16 +111,18 @@ for coord, countries in zip(cluster_coords, cluster_countries):
     individual_sum = 0
     maf_sum = 0
     for country in countries:
+        #Sum up the number of individuals and the minor allele frequency of the SNP in each country
         if country in json_file['individual_num']:
             individual_sum += json_file['individual_num'][country]
         if country in json_file[snp]:
             maf_sum += json_file[snp][country]
     if individual_sum > 0:
-        #round the percentage to 2 decimal places
+        #round the percentage to 3 decimal places
         percentage = maf_sum/(2*individual_sum)
         percentage = round(percentage, 3)
     else:
         percentage = 0
+        #Add the pie chart to the map, label the pie chart with the minor allele frequency of the SNP
     fig.add_pie(values=[percentage, 1-percentage], labels=['maf', ' '],
                 domain={'x':[coord[1]-0.025, coord[1]+0.025], 'y':[coord[0]-0.025, coord[0]+0.025]},
                 textinfo='none', hovertemplate='maf: '+str(percentage), 
@@ -135,4 +130,4 @@ for coord, countries in zip(cluster_coords, cluster_countries):
 
 #Display the chart in Streamlit
 col1.plotly_chart(fig, use_container_width=True)
-#Run: streamlit run WebAplication.py
+
